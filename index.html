@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تطبيق قائمة المهام</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+    }
+    #taskInput {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #addBtn {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: #fff;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    li.completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+    button.deleteBtn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>تطبيق قائمة المهام</h1>
+  <input type="text" id="taskInput" placeholder="اكتب مهمة جديدة..." />
+  <button id="addBtn">أضف</button>
+
+  <ul id="taskList"></ul>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskList = document.getElementById('taskList');
+
+    // تحميل المهام من localStorage عند بدء الصفحة
+    window.onload = () => {
+      let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      tasks.forEach(task => addTaskToDOM(task.text, task.completed));
+    };
+
+    // إضافة مهمة جديدة
+    addBtn.addEventListener('click', () => {
+      const taskText = taskInput.value.trim();
+      if (taskText === '') return alert('يرجى كتابة المهمة أولاً!');
+      addTaskToDOM(taskText, false);
+      saveTask(taskText, false);
+      taskInput.value = '';
+    });
+
+    // دالة لإضافة مهمة إلى قائمة العرض (DOM)
+    function addTaskToDOM(text, completed) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      if (completed) li.classList.add('completed');
+
+      // لتبديل حالة المهمة (منجزة / غير منجزة) عند النقر عليها
+      li.addEventListener('click', () => {
+        li.classList.toggle('completed');
+        updateTasksStorage();
+      });
+
+      // زر حذف المهمة
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'حذف';
+      delBtn.className = 'deleteBtn';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // حتى لا يحدث تبديل حالة المهمة عند الحذف
+        li.remove();
+        updateTasksStorage();
+      });
+
+      li.appendChild(delBtn);
+      taskList.appendChild(li);
+    }
+
+    // حفظ المهمة في localStorage
+    function saveTask(text, completed) {
+      let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      tasks.push({ text, completed });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // تحديث المهام في localStorage حسب حالة القائمة الحالية
+    function updateTasksStorage() {
+      const lis = taskList.querySelectorAll('li');
+      let tasks = [];
+      lis.forEach(li => {
+        tasks.push({
+          text: li.childNodes[0].nodeValue,
+          completed: li.classList.contains('completed')
+        });
+      });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+  </script>
+
+</body>
+</html>
